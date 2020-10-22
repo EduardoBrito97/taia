@@ -24,3 +24,19 @@ Além da implementação, a equipe deverá gerar um relatório descrevendo a sua
 3) Descrição dos resultados experimentais
 
 *** Compare com uma modificação da própria Estratégia Evolutiva, ou com um Algoritmo Genérico (Real)
+
+
+## Especificação definida pelo grupo
+- Representação (Indivíduo): Número real
+- Função de Fitness: 1 / (1 + função de Ackley no indivíduo)
+- População:
+    - Tamanho: 100
+    - Inicialização:
+        - Números reais aleatórios entre -15 e 15
+        - Sem repetição
+- Processo de seleção: 
+    - Sobrevivência dos mais fortes entre pais e filhos (método Thanos)
+- Operadores genéticos:
+    - Recombinação: Edge recombination
+    - Mutação: incrementação ou decrementação
+- Condições de término: 1000 gerações (assumindo que a gente não conhece a resposta)
