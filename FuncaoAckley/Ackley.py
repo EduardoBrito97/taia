@@ -16,15 +16,17 @@ MET_USADO = 0
 
 MELHOR_INDIVIDUO = [[]]
 FITNESS_MELHOR_INDIVIDUO = [0]
-RESPOSTA = 1
+FITNESS_DESEJADO = 1
 
 SOMA = []
 MEDIA = []
 
-NUM_AMOSTRAGEM = 10000
+NUM_AMOSTRAGEM = 5
 
 MAPA_NUM_METODO = { 0:"CROSSFILL ALEATÓRIO E MUTAÇÃO NORMAL",
                     1:"CROSSFILL E MUTAÇÃO MELHORADOS"}
+
+y=["SM","CM"]
 
 def main():
   global MET_USADO
@@ -44,8 +46,7 @@ def main():
 
   for i in range(0, NUM_AMOSTRAGEM):
     populacao = iniciarPopulacao()
-    if i % 200 == 0:
-      print(i)
+    print(i)
     for metodo in range(0, len(MAPA_NUM_METODO)):
       MET_USADO = metodo
       populacaoUsada = populacao.copy()
@@ -75,7 +76,6 @@ def main():
   x_mFM_Error=[]
   x_mTE_Error=[]
   x_mS_Error=[]
-  y=["SM","CM","ERM","TCM","TER"]
   for metodo in MAPA_NUM_METODO:
     mediaPassos = sum(mapaMetodoPassos[metodo])/len(mapaMetodoPassos[metodo])
     mediaFitness = sum(mapaMetodoMedias[metodo])/len(mapaMetodoMedias[metodo])
@@ -170,7 +170,7 @@ def rodarPrograma(populacao):
   atualizaInfograficos(populacao)
   numeroFitnessCalculados = NUM_POP
   while (numeroFitnessCalculados <= NUM_MAX_ITERACOES 
-          and FITNESS_MELHOR_INDIVIDUO[-1] < RESPOSTA):
+          and FITNESS_MELHOR_INDIVIDUO[-1] < FITNESS_DESEJADO):
     populacao = realizarCruzamento(populacao)
     populacao = realizarMutacao(populacao)
     atualizaInfograficos(populacao)
@@ -234,9 +234,6 @@ def calculaFitness(individuo):
 
   resultadoCalc = primeiraExpressao + segundaExpressao + 20 + 1
   return 1 / (1 + resultadoCalc)
-
-def pegarPosicoes(individuo):
-  return [int(individuo[i:i+3], 2) for i in range(0, len(individuo), 3)]
 
 def realizarCruzamento(populacao):
   chanceDaVez = random.randint(0,101)
@@ -340,46 +337,17 @@ def pegarPaisMelhorado(populacao, numPais):
 
   return pais
 
-def cutCrossfill(paibin1,paibin2):
-  pai1 = pegarPosicoes(paibin1)
-  pai2 = pegarPosicoes(paibin2)
-
-  filho1 = np.zeros(NUM_XS,np.int)
-  filho2 = np.zeros(NUM_XS,np.int)
+def cutCrossfill(pai1,pai2):
+  filho1 = np.zeros(NUM_XS,np.float)
+  filho2 = np.zeros(NUM_XS,np.float)
   ponto = random.randint(1,NUM_XS)
 
   filho1[0:ponto] = pai1[0:ponto]
   filho2[0:ponto] = pai2[0:ponto]
 
-  for posicao in range(ponto,NUM_XS):
-    verifica = True
-    p1 = posicao
-    while(verifica):
-      if(pai2[p1] not in filho1[0:posicao]):
-        filho1[posicao] = pai2[p1]
-        verifica = False
-      else:
-        p1 = p1 + 1
-        if(p1==NUM_XS):
-          p1 = 0 
-
-    verifica = True
-    p2 = posicao
-    while(verifica):
-      if(pai1[p2] not in filho2[0:posicao]):
-        filho2[posicao] = pai1[p2]
-        verifica = False
-      else:
-        p2 = p2 + 1
-        if(p2==NUM_XS):
-          p2 = 0
-    
   return filho1, filho2
 
-def edgeRecombination(paibin1,paibin2):
-  pai1 = pegarPosicoes(paibin1)
-  pai2 = pegarPosicoes(paibin2)
-
+def edgeRecombination(pai1,pai2):
   filho1 = []
   neighbor = {}
   neighbor = defaultdict(list)
@@ -387,12 +355,12 @@ def edgeRecombination(paibin1,paibin2):
   for i in range(0,NUM_XS):
     index_p1 = pai1.index(i)
     index_p2 = pai2.index(i)
-    neighbor[str(i)].append(pai1[(index_p1+1)%8])
-    neighbor[str(i)].append(pai1[(index_p1-1)%8])
+    neighbor[str(i)].append(pai1[(index_p1+1)%NUM_XS])
+    neighbor[str(i)].append(pai1[(index_p1-1)%NUM_XS])
     if(pai2[(index_p2+1)%8] not in neighbor[str(i)]):
-      neighbor[str(i)].append(pai2[(index_p2+1)%8])
+      neighbor[str(i)].append(pai2[(index_p2+1)%NUM_XS])
     if(pai2[(index_p2-1)%8] not in neighbor[str(i)]):
-      neighbor[str(i)].append(pai2[(index_p2-1)%8])
+      neighbor[str(i)].append(pai2[(index_p2-1)%NUM_XS])
 
   X = random.randint(0,NUM_XS-1)
   while(len(filho1)!= NUM_XS):
@@ -425,10 +393,10 @@ def edgeRecombination(paibin1,paibin2):
   if len(filho) == len(set(filho)):
     return filho
   else:
-    if calculaFitness(paibin1)>calculaFitness(paibin2):
-      return paibin1
+    if calculaFitness(pai1)>calculaFitness(pai2):
+      return pai1
     else:
-      return paibin2
+      return pai2
 
 def pegarIndicesPioresIndividuos(populacao, numIndividuos):
   fitnessPop = []
@@ -452,45 +420,15 @@ def pegarIndicesPioresIndividuos(populacao, numIndividuos):
 def realizarMutacao(populacao):
   novaPop = []
   for individuo in populacao:
-    if (PROB_MUTACAO * 100 > random.randint(0, 101)):
-      pos1 = random.randint(0, NUM_XS-1)
-      pos2 = random.randint(0, NUM_XS-1)
-      while (pos1 == pos2):
-        pos2 = random.randint(0, NUM_XS-1)
-      individuo = realizarTroca(individuo, pos1, pos2)
+    novoIndividuo = []
+    for x in individuo:
+      novoX = x
+      if (PROB_MUTACAO * 100 > random.randint(0, 101)):
+        novoX = random.uniform(-15, 15)
 
-    novaPop.append(individuo)
+      novoIndividuo.append(novoX)
+    novaPop.append(novoIndividuo)
 
   return novaPop
-
-def realizarTroca(individuo, pos1, pos2):
-  posicoes = pegarPosicoes(individuo)
-  aux = posicoes[pos1]
-  posicoes[pos1] = posicoes[pos2]
-  posicoes[pos2] = aux
-  return posicoes
-
-def plotGraficos(mediasAntes, mediasDepois, fitnessMelhoresIndividuosAntes, fitnessMelhoresIndividuosDepois, somasAntes, somasDepois):
-  trios = []
-  trios.append((mediasAntes, mediasDepois, "Média"))
-  trios.append((fitnessMelhoresIndividuosAntes, fitnessMelhoresIndividuosDepois, "Fitness Melhores Individuos"))
-  trios.append((somasAntes, somasDepois, "Somas"))
-
-  for trio in trios:
-    biggerLen = len(trio[0])
-    if len(trio[1]) > biggerLen:
-      biggerLen = len(trio[1])
-
-    plt.rcParams.update({'font.size': 14})
-    ax = plt.figure(figsize=(12,8)).gca()
-    plt.plot(range(1,len(trio[0])+1), trio[0], 'orange',linestyle='--', label=trio[2] + ' Antes')
-    plt.plot(range(1,len(trio[1])+1), trio[1], 'r',linestyle='--', label=trio[2] + ' Depois')
-    ax.set_xlim(1, biggerLen+1)
-    plt.title(" ")
-    plt.xlabel('Passos')
-    plt.ylabel('')
-    plt.grid()
-    plt.legend()
-    plt.show()
 
 main()
