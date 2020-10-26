@@ -5,7 +5,7 @@ import numpy as np
 import time
 from collections import defaultdict
 
-NUM_MAX_ITERACOES = 10000
+NUM_MAX_GERACOES = 10000
 NUM_POP = 100
 PROB_MUTACAO = 0.4
 PROB_RECOMB = 0.9
@@ -21,7 +21,7 @@ FITNESS_DESEJADO = 1
 SOMA = []
 MEDIA = []
 
-NUM_AMOSTRAGEM = 5
+NUM_AMOSTRAGEM = 1
 
 MAPA_NUM_METODO = { 0:"PIORES INDIVIDUOS, CRUZAMENTO DISCRETO, MUTAÇÃO UNIFORME",
                     1:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO UNIFORME",
@@ -56,7 +56,7 @@ def main():
       populacaoUsada = populacao.copy()
 
       comeco = time.time()
-      numPassosAgora = int(rodarPrograma(populacaoUsada)/NUM_POP)
+      numPassosAgora = rodarPrograma(populacaoUsada)
       mapaMetodoTempos[metodo].append(time.time() - comeco)
 
       mapaMetodoPassos[metodo].append(numPassosAgora)
@@ -121,15 +121,15 @@ def desvioPadrao(elementos):
 def rodarPrograma(populacao):
   resetarVarGlobais()
   atualizaDados(populacao)
-  numeroFitnessCalculados = NUM_POP
-  while (numeroFitnessCalculados <= NUM_MAX_ITERACOES 
+  numGeracoes = 1
+  while (numGeracoes <= NUM_MAX_GERACOES 
           and FITNESS_MELHOR_INDIVIDUO[-1] < FITNESS_DESEJADO):
     populacao = realizarCruzamento(populacao)
     populacao = realizarMutacao(populacao)
     atualizaDados(populacao)
-    numeroFitnessCalculados += NUM_POP
+    numGeracoes += 1
 
-  return numeroFitnessCalculados
+  return numGeracoes
 
 def resetarVarGlobais():
   global SOMA, FITNESS_MELHOR_INDIVIDUO, MEDIA, MELHOR_INDIVIDUO
