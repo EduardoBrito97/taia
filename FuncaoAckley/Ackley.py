@@ -344,6 +344,23 @@ def mutacaoNaoUniforme(populacao):
 
   return novaPop
 
+def mutacaoGaussiana(populacao):
+  novaPop = []
+  mu = 0
+  sigma = 0.5
+  for individuo in populacao:
+    dX = random.gauss(mu, sigma)
+    novoIndividuo = []
+    for x in individuo:
+      novoX = x
+      if (PROB_MUTACAO * 100 > random.randint(0, 101)):
+        novoX = (x + dX) % 15
+      novoIndividuo.append(novoX)
+      
+    novaPop.append(novoIndividuo)
+
+  return novaPop
+
 def plotGraficos(y_mP,y_mF,y_mFM,y_mTE,y_mS,y_mP_Error,y_mF_Error,y_mFM_Error,y_mTE_Error,y_mS_Error,x):
   plt.style.use('ggplot')
 
