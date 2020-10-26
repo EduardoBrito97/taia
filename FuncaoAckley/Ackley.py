@@ -30,6 +30,9 @@ MAPA_NUM_METODO = { 0:"PIORES INDIVIDUOS, CRUZAMENTO DISCRETO, MUTAÇÃO UNIFORM
                     4:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO NÃO UNIFORME",
                     5:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO NÃO UNIFORME"}
 
+LIM_MAX = 1
+LIM_MIN = -1
+
 y=["PICDMU","PICIMU", "TCDMU", "TCIMU", "PICIMNU", "TCIMNU"]
 
 def main():
@@ -150,7 +153,7 @@ def iniciarPopulacao():
 def geraIndividuo():
   individuo = []
   for _ in range(NUM_XS):
-    individuo.append(random.uniform(-15, 15))
+    individuo.append(random.uniform(LIM_MIN, LIM_MAX))
   return individuo
 
 def atualizaDados(populacao):
@@ -320,7 +323,7 @@ def mutacaoUniforme(populacao):
     for x in individuo:
       novoX = x
       if (PROB_MUTACAO * 100 > random.randint(0, 101)):
-        novoX = random.uniform(-15, 15)
+        novoX = random.uniform(LIM_MIN, LIM_MAX)
 
       novoIndividuo.append(novoX)
     novaPop.append(novoIndividuo)
