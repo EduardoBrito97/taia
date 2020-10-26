@@ -459,12 +459,12 @@ def edgeRecombination(paibin1,paibin2):
   for i in range(0,QTD_RAINHAS):
     index_p1 = pai1.index(i)
     index_p2 = pai2.index(i)
-    neighbor[str(i)].append(pai1[(index_p1+1)%8])
-    neighbor[str(i)].append(pai1[(index_p1-1)%8])
+    neighbor[str(i)].append(pai1[(index_p1+1)%QTD_RAINHAS])
+    neighbor[str(i)].append(pai1[(index_p1-1)%QTD_RAINHAS])
     if(pai2[(index_p2+1)%8] not in neighbor[str(i)]):
-      neighbor[str(i)].append(pai2[(index_p2+1)%8])
+      neighbor[str(i)].append(pai2[(index_p2+1)%QTD_RAINHAS])
     if(pai2[(index_p2-1)%8] not in neighbor[str(i)]):
-      neighbor[str(i)].append(pai2[(index_p2-1)%8])
+      neighbor[str(i)].append(pai2[(index_p2-1)%QTD_RAINHAS])
 
   X = random.randint(0,QTD_RAINHAS-1)
   while(len(filho1)!= QTD_RAINHAS):
