@@ -5,7 +5,7 @@ import numpy as np
 import time
 from collections import defaultdict
 
-NUM_MAX_GERACOES = 10000
+NUM_MAX_GERACOES = 100
 NUM_POP = 100
 PROB_MUTACAO = 0.4
 PROB_RECOMB = 0.9
@@ -170,23 +170,23 @@ def atualizaDados(populacao):
   MEDIA.append(SOMA[-1] / len(populacao))
   return
 
-def calculaFitness(individuo):
+def funcaoAckley(individuo):
   somaXiQuadrado = 0
-  for xi in individuo:
-    somaXiQuadrado += xi*xi
-  
-  exp1 = -0.2*math.sqrt(somaXiQuadrado/30)
-  primeiraExpressao = -20 * math.exp(exp1)
-
   somaCosXi = 0
   for xi in individuo:
+    somaXiQuadrado += xi*xi
     somaCosXi = math.cos(math.pi * 2 * xi)
-  exp2 = somaCosXi / 30
+  
+  exp1 = -0.2*math.sqrt(somaXiQuadrado/NUM_XS)
+  primeiraExpressao = -20 * math.exp(exp1)
 
+  exp2 = somaCosXi / NUM_XS
   segundaExpressao = -math.exp(exp2)
 
-  resultadoCalc = primeiraExpressao + segundaExpressao + 20 + 1
-  return 1 / (1 + resultadoCalc)
+  return primeiraExpressao + segundaExpressao + 20 + math.exp(1)
+
+def calculaFitness(individuo):
+  return 1 / (1 + funcaoAckley(individuo))
 
 def realizarCruzamento(populacao):
   chanceDaVez = random.randint(0,101)
