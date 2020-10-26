@@ -1,4 +1,5 @@
 import random
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import time
@@ -8,48 +9,25 @@ NUM_MAX_ITERACOES = 10000
 NUM_POP = 100
 PROB_MUTACAO = 0.4
 PROB_RECOMB = 0.9
-QTD_RAINHAS = 8
+NUM_XS = 30
 QTD_PAIS = 5
-codex = ["000","001","010","011","100","101","110","111"]
 
 MET_USADO = 0
 
-MELHOR_INDIVIDUO = ["000000000000000000000000"]
+MELHOR_INDIVIDUO = [[]]
 FITNESS_MELHOR_INDIVIDUO = [0]
-RESPOSTA = 1 
+RESPOSTA = 1
 
 SOMA = []
 MEDIA = []
 
 NUM_AMOSTRAGEM = 10000
 
-NUM_METODOS = 5
-MAPA_NUM_METODO = { 0:"SEM MELHORIAS",
-                    1:"CROSSFILL E MUTAÇÃO MELHORADOS",
-                    2:"EDGE RECOMBINATION COM MUTAÇÃO MELHORADA",
-                    3:"THANOS C CROSSFILL MELHORADO",
-                    4:"THANOS COM EDGE RECOMBINATION"}
-
-def gerarCodex():
-  tamString = 0
-  limite = 1
-  while limite < QTD_RAINHAS:
-    tamString += 1
-    limite = limite * 2
-
-  global codex
-  codex = []
-  for i in range(0, QTD_RAINHAS):
-    numBinario = bin(i).replace("0b", "")
-    qtdZeros = tamString - len(numBinario)
-    zeros = ''.join([char*qtdZeros for char in "0"])
-    resultado = zeros + numBinario
-    codex.append(resultado)
+MAPA_NUM_METODO = { 0:"CROSSFILL ALEATÓRIO E MUTAÇÃO NORMAL",
+                    1:"CROSSFILL E MUTAÇÃO MELHORADOS"}
 
 def main():
   global MET_USADO
-
-  gerarCodex()
 
   mapaMetodoPassos = {}
   mapaMetodoMedias = {}
@@ -57,7 +35,7 @@ def main():
   mapaMetodoTempos = {}
   mapaMetodoSomas = {}
 
-  for metodo in range(0, NUM_METODOS):
+  for metodo in range(0, len(MAPA_NUM_METODO)):
     mapaMetodoPassos[metodo] = []
     mapaMetodoMedias[metodo] = []
     mapaMetodoMediasMelhorIndividuo[metodo] = []
@@ -68,7 +46,7 @@ def main():
     populacao = iniciarPopulacao()
     if i % 200 == 0:
       print(i)
-    for metodo in range(0, NUM_METODOS):
+    for metodo in range(0, len(MAPA_NUM_METODO)):
       MET_USADO = metodo
       populacaoUsada = populacao.copy()
 
@@ -218,12 +196,9 @@ def iniciarPopulacao():
 
 def geraIndividuo():
   individuo = []
-  while (len(individuo)) < QTD_RAINHAS:
-    posicao = codex[random.randint(0,QTD_RAINHAS-1)]
-    if (not posicao in individuo):
-      individuo.append(posicao)
-    
-  return "".join(individuo)
+  for _ in range(30):
+    individuo.append(random.uniform(-15, 15))
+  return individuo
 
 def atualizaInfograficos(populacao):
   global SOMA, MEDIA, MELHOR_INDIVIDUO, FITNESS_MELHOR_INDIVIDUO
@@ -243,93 +218,46 @@ def atualizaInfograficos(populacao):
   return
 
 def calculaFitness(individuo):
-  posicoes = pegarPosicoes(individuo)
-  numRainhasEmContato=0
+  somaXiQuadrado = 0
+  for xi in individuo:
+    somaXiQuadrado += xi*xi
+  
+  exp1 = -0.2*math.sqrt(somaXiQuadrado/30)
+  primeiraExpressao = -20 * math.exp(exp1)
 
-  for coluna in range(len(posicoes)):
-    numRainhasEmContato += rainhasEmContato(coluna, posicoes)
+  somaCosXi = 0
+  for xi in individuo:
+    somaCosXi = math.cos(math.pi * 2 * xi)
+  exp2 = somaCosXi / 30
 
-  return 1 / (1 + numRainhasEmContato)
+  segundaExpressao = -math.exp(exp2)
+
+  resultadoCalc = primeiraExpressao + segundaExpressao + 20 + 1
+  return 1 / (1 + resultadoCalc)
 
 def pegarPosicoes(individuo):
   return [int(individuo[i:i+3], 2) for i in range(0, len(individuo), 3)]
-
-def pegarIndividuo(posicoes):
-  individuo = []
-  for posicao in posicoes:
-    individuo.append(codex[posicao])
-  return "".join(individuo)
-
-def rainhasEmContato(coluna, posicoes):
-  linha = posicoes[coluna]
-  rainhasEmContato = 0
-
-  for colunaAnalisada in range (coluna+1, QTD_RAINHAS):
-    if (colunaAnalisada > 7):
-      break
-    linhaAnalisada = posicoes[colunaAnalisada]
-    diferencaColunas = colunaAnalisada - coluna
-    if (linha == linhaAnalisada + diferencaColunas 
-        or linha == linhaAnalisada - diferencaColunas):
-      rainhasEmContato += 1
-
-  for colunaAnalisada in range (coluna-1, -1, -1):
-    if (colunaAnalisada < 0):
-      break
-    diferencaColunas = coluna - colunaAnalisada
-    linhaAnalisada = posicoes[colunaAnalisada]
-    if (linha == linhaAnalisada + diferencaColunas 
-        or linha == linhaAnalisada - diferencaColunas):
-      rainhasEmContato += 1
-
-  return rainhasEmContato
 
 def realizarCruzamento(populacao):
   chanceDaVez = random.randint(0,101)
   if (PROB_RECOMB * 100 < chanceDaVez):
     return populacao
-  
-  if MET_USADO == 1:
-    pais = pegarPaisMelhorado(populacao, 2)
-    filho1, filho2 = cutCrossfillMelhorado(pais[0], pais[1])
-    
-    pioresIndividuosIndices = pegarIndicesPioresIndividuos(populacao, 2)
-    populacao[pioresIndividuosIndices[0]] = filho1
-    populacao[pioresIndividuosIndices[1]] = filho2
 
-  elif MET_USADO == 2:
-    pais = pegarPaisMelhoradoTorneio(populacao, 2)
-    filho1 = edgeRecombination(pais[0], pais[1])
-    filho2 = edgeRecombination(pais[0], pais[1])
-    
-    pioresIndividuosIndices = pegarIndicesPioresIndividuos(populacao, 2)
-    populacao[pioresIndividuosIndices[0]] = filho1
-    populacao[pioresIndividuosIndices[1]] = filho2
-
-  elif MET_USADO == 3:
-    pais = pegarPaisSuperSmashBros(populacao, len(populacao)/2) 
-    indexPais = random.sample(range(0, len(pais)), len(pais))
-    for i in range(0,len(indexPais),2):
-      filho1, filho2 = cutCrossfillMelhorado(pais[indexPais[i]], pais[indexPais[i+1]])
-      populacao.append(filho1)
-      populacao.append(filho2)
-
-  elif MET_USADO == 4:
-    pais = pegarPaisSuperSmashBros(populacao, len(populacao)/2) 
-    indexPais = random.sample(range(0, len(pais)), len(pais))
-    for i in range(0,len(indexPais),2):
-      filho1 = edgeRecombination(pais[indexPais[i]], pais[indexPais[i+1]])
-      filho2 = edgeRecombination(pais[indexPais[i]], pais[indexPais[i+1]])
-      populacao.append(filho1)
-      populacao.append(filho2)
-
-  elif MET_USADO == 0:
+  if MET_USADO == 0:
     pais = pegarPais(populacao, 2)
     filho1, filho2 = cutCrossfill(pais[0], pais[1])
     
     pioresIndividuosIndices = pegarIndicesPioresIndividuos(populacao, 2)
     populacao[pioresIndividuosIndices[0]] = filho1
     populacao[pioresIndividuosIndices[1]] = filho2
+  
+  elif MET_USADO == 1:
+    pais = pegarPaisSuperSmashBros(populacao, len(populacao)/2) 
+    indexPais = random.sample(range(0, len(pais)), len(pais))
+    for i in range(0,len(indexPais),2):
+      filho1, filho2 = cutCrossfill(pais[indexPais[i]], pais[indexPais[i+1]])
+      populacao.append(filho1)
+      populacao.append(filho2)
 
   return populacao
 
@@ -416,14 +344,14 @@ def cutCrossfill(paibin1,paibin2):
   pai1 = pegarPosicoes(paibin1)
   pai2 = pegarPosicoes(paibin2)
 
-  filho1 = np.zeros(QTD_RAINHAS,np.int)
-  filho2 = np.zeros(QTD_RAINHAS,np.int)
-  ponto = random.randint(1,QTD_RAINHAS)
+  filho1 = np.zeros(NUM_XS,np.int)
+  filho2 = np.zeros(NUM_XS,np.int)
+  ponto = random.randint(1,NUM_XS)
 
   filho1[0:ponto] = pai1[0:ponto]
   filho2[0:ponto] = pai2[0:ponto]
 
-  for posicao in range(ponto,QTD_RAINHAS):
+  for posicao in range(ponto,NUM_XS):
     verifica = True
     p1 = posicao
     while(verifica):
@@ -432,7 +360,7 @@ def cutCrossfill(paibin1,paibin2):
         verifica = False
       else:
         p1 = p1 + 1
-        if(p1==QTD_RAINHAS):
+        if(p1==NUM_XS):
           p1 = 0 
 
     verifica = True
@@ -443,10 +371,10 @@ def cutCrossfill(paibin1,paibin2):
         verifica = False
       else:
         p2 = p2 + 1
-        if(p2==QTD_RAINHAS):
+        if(p2==NUM_XS):
           p2 = 0
     
-  return pegarIndividuo(filho1),pegarIndividuo(filho2)
+  return filho1, filho2
 
 def edgeRecombination(paibin1,paibin2):
   pai1 = pegarPosicoes(paibin1)
@@ -456,7 +384,7 @@ def edgeRecombination(paibin1,paibin2):
   neighbor = {}
   neighbor = defaultdict(list)
   
-  for i in range(0,QTD_RAINHAS):
+  for i in range(0,NUM_XS):
     index_p1 = pai1.index(i)
     index_p2 = pai2.index(i)
     neighbor[str(i)].append(pai1[(index_p1+1)%8])
@@ -466,15 +394,15 @@ def edgeRecombination(paibin1,paibin2):
     if(pai2[(index_p2-1)%8] not in neighbor[str(i)]):
       neighbor[str(i)].append(pai2[(index_p2-1)%8])
 
-  X = random.randint(0,QTD_RAINHAS-1)
-  while(len(filho1)!= QTD_RAINHAS):
+  X = random.randint(0,NUM_XS-1)
+  while(len(filho1)!= NUM_XS):
     filho1.append(X)
-    for i in range(0,QTD_RAINHAS):
+    for i in range(0,NUM_XS):
       if X in neighbor[str(i)] : neighbor[str(i)].remove(X)
     Z = X
     if(neighbor[str(X)] == []):
       while(Z not in filho1):
-        Z = random.randint(0,QTD_RAINHAS-1)
+        Z = random.randint(0,NUM_XS-1)
     else:
       tamanho = []
       for j in range(0,len(neighbor[str(X)])):
@@ -493,7 +421,7 @@ def edgeRecombination(paibin1,paibin2):
     
     X = Z
   
-  filho = pegarIndividuo(filho1)
+  filho = filho1
   if len(filho) == len(set(filho)):
     return filho
   else:
@@ -501,47 +429,6 @@ def edgeRecombination(paibin1,paibin2):
       return paibin1
     else:
       return paibin2
-
-def cutCrossfillMelhorado(paibin1,paibin2):
-  pai1 = pegarPosicoes(paibin1)
-  pai2 = pegarPosicoes(paibin2)
-
-  filho1 = np.zeros(QTD_RAINHAS,np.int)
-  filho2 = np.zeros(QTD_RAINHAS,np.int)
-  ponto = pegarPontoDeChoque(pai1)
-
-  filho1[0:ponto] = pai1[0:ponto]
-  filho2[0:ponto] = pai2[0:ponto]
-
-  for posicao in range(ponto,QTD_RAINHAS):
-    verifica = True
-    p1 = posicao
-    while(verifica):
-      if(pai2[p1] not in filho1[0:posicao]):
-        filho1[posicao] = pai2[p1]
-        verifica = False
-      else:
-        p1 = p1 + 1
-        if(p1==QTD_RAINHAS):
-          p1 = 0 
-
-    verifica = True
-    p2 = posicao
-    while(verifica):
-      if(pai1[p2] not in filho2[0:posicao]):
-        filho2[posicao] = pai1[p2]
-        verifica = False
-      else:
-        p2 = p2 + 1
-        if(p2==QTD_RAINHAS):
-          p2 = 0
-    
-  return pegarIndividuo(filho1),pegarIndividuo(filho2)
-
-def pegarPontoDeChoque(pai1):
-  for i in range(0, QTD_RAINHAS):
-    if rainhasEmContato(i, pai1) > 0:
-      return i
 
 def pegarIndicesPioresIndividuos(populacao, numIndividuos):
   fitnessPop = []
@@ -566,17 +453,10 @@ def realizarMutacao(populacao):
   novaPop = []
   for individuo in populacao:
     if (PROB_MUTACAO * 100 > random.randint(0, 101)):
-      if MET_USADO > 0:
-        if calculaFitness(individuo) == 1:
-          novaPop.append(individuo)
-          continue
-        pos1 = pegarPontoDeChoque(pegarPosicoes(individuo))
-      else:
-        pos1 = random.randint(0, QTD_RAINHAS-1)
-
-      pos2 = random.randint(0, QTD_RAINHAS-1)
+      pos1 = random.randint(0, NUM_XS-1)
+      pos2 = random.randint(0, NUM_XS-1)
       while (pos1 == pos2):
-        pos2 = random.randint(0, QTD_RAINHAS-1)
+        pos2 = random.randint(0, NUM_XS-1)
       individuo = realizarTroca(individuo, pos1, pos2)
 
     novaPop.append(individuo)
@@ -588,7 +468,7 @@ def realizarTroca(individuo, pos1, pos2):
   aux = posicoes[pos1]
   posicoes[pos1] = posicoes[pos2]
   posicoes[pos2] = aux
-  return pegarIndividuo(posicoes)
+  return posicoes
 
 def plotGraficos(mediasAntes, mediasDepois, fitnessMelhoresIndividuosAntes, fitnessMelhoresIndividuosDepois, somasAntes, somasDepois):
   trios = []
