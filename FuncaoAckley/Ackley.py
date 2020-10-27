@@ -5,10 +5,10 @@ import numpy as np
 import time
 from collections import defaultdict
 
-NUM_MAX_GERACOES = 1000
+NUM_MAX_GERACOES = 4000
 NUM_POP = 100
-PROB_MUTACAO = 0.2
-PROB_RECOMB = 0.5
+PROB_MUTACAO = 0.01
+PROB_RECOMB = 0.9
 NUM_XS = 30
 QTD_PAIS = 5
 
@@ -21,7 +21,10 @@ FITNESS_DESEJADO = 1
 SOMA = []
 MEDIA = []
 
-NUM_AMOSTRAGEM = 5
+NUM_AMOSTRAGEM = 2
+
+PASSO_BLX_MAX = 0.20
+PESO_FITNESS_IDV_MUTACAO = 10
 
 ## 1º número = seleção
 ##    1 = Piores Individuos
@@ -29,19 +32,23 @@ NUM_AMOSTRAGEM = 5
 ## 2º número = cruzamento
 ##    1 = Discreto
 ##    2 = Intermediário
+##    3 = BLX
 ## 3º número = mutação
 ##    1 = Uniforme
 ##    2 = Não Uniforme
 ##    3 = Gaussiana
+##    4 = BLX
 
 MAPA_NUM_METODO = { 111:"PIORES INDIVIDUOS, CRUZAMENTO DISCRETO, MUTAÇÃO UNIFORME",
                     121:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO UNIFORME",
                     122:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO NÃO UNIFORME",
                     123:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO GAUSSIANA",
+                    134:"PIORES INDIVIDUOS, CRUZAMENTO BLX, MUTAÇÃO BLX",
                     211:"THANOS, CRUZAMENTO DISCRETO, MUTAÇÃO UNIFORME",
                     221:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO UNIFORME",
                     222:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO NÃO UNIFORME",
-                    223:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO GAUSSIANA"}
+                    223:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO GAUSSIANA",
+                    234:"THANOS, CRUZAMENTO BLX, MUTAÇÃO BLX"}
 
 LIM_MAX = 15
 LIM_MIN = -15
@@ -103,6 +110,9 @@ def rodarPrograma(populacao):
     populacao = realizarMutacao(populacao)
     atualizaDados(populacao)
     numGeracoes += 1
+
+    if numGeracoes % 200 == 0:
+      print("NumGerações: " + str(numGeracoes))
 
   return numGeracoes
 
@@ -198,6 +208,8 @@ def cruzar(pai1, pai2):
     return cruzamentoDiscreto(pai1, pai2, 2)
   elif MET_USADO % 100 < 30:
     return cruzamentoIntermediario(pai1, pai2, 2)
+  elif MET_USADO % 100 < 40:
+    return cruzamentoBlx(pai1, pai2, 2)
   else:
     raise Exception("No method recognized for crossing.")
 
@@ -262,6 +274,21 @@ def cruzamentoIntermediario(pai1, pai2, numFilhos):
 
   return filhos
 
+def cruzamentoBlx(pai1, pai2, numFilhos):
+  filhos = []
+  for _ in range(numFilhos):
+    filho = []
+    for i in range(NUM_XS):
+      menor = min(pai1[i], pai2[i])
+      maior = max(pai1[i], pai2[i])
+
+      delta = (maior - menor)
+      xi = random.uniform(menor - (PASSO_BLX_MAX * delta), maior + (PASSO_BLX_MAX * delta)) % 15
+      filho.append(xi)
+    filhos.append(filho)
+
+  return filhos
+
 def pegarIndicesPioresIndividuos(populacao, numIndividuos):
   fitnessPop = []
   mapaFitnessPosicao = {}
@@ -288,6 +315,8 @@ def realizarMutacao(populacao):
     return mutacaoNaoUniforme(populacao)
   elif MET_USADO % 10 == 3:
     return mutacaoGaussiana(populacao)
+  elif MET_USADO % 10 == 4:
+    return mutacaoBlx(populacao)
   else:
     raise Exception("No method recognized for mutation.")
 
@@ -333,6 +362,23 @@ def mutacaoGaussiana(populacao):
       novoX = x
       if (PROB_MUTACAO * 100 > random.randint(0, 101)):
         novoX = (x + dX) % 15
+      novoIndividuo.append(novoX)
+      
+    novaPop.append(novoIndividuo)
+
+  return novaPop
+
+def mutacaoBlx(populacao):
+  novaPop = []
+  for individuo in populacao:
+    novoIndividuo = []
+    fitnessIndividuo = calculaFitness(individuo)
+    multiplicadorPorFitness = 1/(fitnessIndividuo*PESO_FITNESS_IDV_MUTACAO)
+    passo = PASSO_BLX_MAX * multiplicadorPorFitness
+    for x in individuo:
+      novoX = x
+      if (PROB_MUTACAO * 100 > random.randint(0, 101)):
+        novoX = random.uniform(x + (LIM_MIN*passo), x + (LIM_MAX*passo)) % 15
       novoIndividuo.append(novoX)
       
     novaPop.append(novoIndividuo)
