@@ -5,10 +5,10 @@ import numpy as np
 import time
 from collections import defaultdict
 
-NUM_MAX_GERACOES = 100
+NUM_MAX_GERACOES = 1000
 NUM_POP = 100
-PROB_MUTACAO = 0
-PROB_RECOMB = 0.4
+PROB_MUTACAO = 0.2
+PROB_RECOMB = 0.5
 NUM_XS = 30
 QTD_PAIS = 5
 
@@ -21,8 +21,7 @@ FITNESS_DESEJADO = 1
 SOMA = []
 MEDIA = []
 
-NUM_AMOSTRAGEM = 1
-
+NUM_AMOSTRAGEM = 5
 
 ## 1º número = seleção
 ##    1 = Piores Individuos
@@ -85,46 +84,7 @@ def main():
       mediaSomaAgora = sum(SOMA)/len(SOMA)
       mapaMetodoSomas[metodo].append(mediaSomaAgora)
 
-  x_mP=[]
-  x_mF=[]
-  x_mFM=[]
-  x_mTE=[]
-  x_mS=[]
-  x_mP_Error=[]
-  x_mF_Error=[]
-  x_mFM_Error=[]
-  x_mTE_Error=[]
-  x_mS_Error=[]
-  for metodo in MAPA_NUM_METODO.keys():
-    mediaPassos = sum(mapaMetodoPassos[metodo])/len(mapaMetodoPassos[metodo])
-    mediaFitness = sum(mapaMetodoMedias[metodo])/len(mapaMetodoMedias[metodo])
-    mediaFitnessMelhorIndividuo = sum( mapaMetodoMediasMelhorIndividuo[metodo])/len(mapaMetodoMediasMelhorIndividuo[metodo])
-    mediaTempoExecucao = sum(mapaMetodoTempos[metodo])/len(mapaMetodoTempos[metodo])
-    mediaSoma = sum(mapaMetodoSomas[metodo])/len(mapaMetodoSomas[metodo])
-    x_mP.append(mediaPassos)
-    x_mF.append(mediaFitness)
-    x_mFM.append(mediaFitnessMelhorIndividuo)
-    x_mTE.append(mediaTempoExecucao)
-    x_mS.append(mediaSoma)
-    x_mP_Error.append(desvioPadrao(mapaMetodoPassos[metodo]))
-    x_mF_Error.append(desvioPadrao(mapaMetodoMedias[metodo]))
-    x_mFM_Error.append(desvioPadrao(mapaMetodoMediasMelhorIndividuo[metodo]))
-    x_mTE_Error.append(desvioPadrao(mapaMetodoTempos[metodo]))
-    x_mS_Error.append(desvioPadrao(mapaMetodoSomas[metodo]))
-    print('Quantidade de passos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(mediaPassos))
-    print('Desvio Padrão de passos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(desvioPadrao(mapaMetodoPassos[metodo])))
-    print('Média de fitness para ' + MAPA_NUM_METODO[metodo] + ': ' + str(mediaFitness))
-    print('Desvio Padrão de passos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(desvioPadrao(mapaMetodoMedias[metodo])))
-    print('Média de fitness melhores individuos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(mediaFitnessMelhorIndividuo))
-    print('Desvio Padrão de passos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(desvioPadrao(mapaMetodoMediasMelhorIndividuo[metodo])))
-    print('Média tempo de execução para ' + MAPA_NUM_METODO[metodo] + ': ' + str(mediaTempoExecucao) + ' segundos')
-    print('Desvio Padrão de passos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(desvioPadrao(mapaMetodoTempos[metodo])))
-    print('Média de soma de fitness para ' + MAPA_NUM_METODO[metodo] + ': ' + str(mediaSoma))
-    print('Desvio Padrão de passos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(desvioPadrao(mapaMetodoSomas[metodo])))
-    
-    print('------------------------------------------------------------------------------------------------')
-
-  plotGraficos(x_mP,x_mF,x_mFM,x_mTE,x_mS,x_mP_Error,x_mF_Error,x_mFM_Error,x_mTE_Error,x_mS_Error, MAPA_NUM_METODO.keys())
+  pegaDadosPlotaGraficos(mapaMetodoPassos, mapaMetodoMedias, mapaMetodoMediasMelhorIndividuo, mapaMetodoTempos, mapaMetodoSomas)
 
 def desvioPadrao(elementos):
   mi = sum(elementos)/len(elementos)
@@ -221,7 +181,10 @@ def realizarCruzamento(populacao):
     pais = pegarPaisSuperSmashBros(populacao, len(populacao)/2) 
     indexPais = random.sample(range(0, len(pais)), len(pais))
     for i in range(0,len(indexPais),2):
-      filhos = cruzar(pais[indexPais[i]], pais[indexPais[i+1]])
+      if i == len(pais) - 1:
+        filhos = cruzar(pais[indexPais[i]], pais[indexPais[i]])
+      else:
+        filhos = cruzar(pais[indexPais[i]], pais[indexPais[i+1]])
       populacao.append(filhos[0])
       populacao.append(filhos[1])
 
@@ -375,6 +338,48 @@ def mutacaoGaussiana(populacao):
     novaPop.append(novoIndividuo)
 
   return novaPop
+
+def pegaDadosPlotaGraficos(mapaMetodoPassos, mapaMetodoMedias, mapaMetodoMediasMelhorIndividuo, mapaMetodoTempos, mapaMetodoSomas):
+  x_mP=[]
+  x_mF=[]
+  x_mFM=[]
+  x_mTE=[]
+  x_mS=[]
+  x_mP_Error=[]
+  x_mF_Error=[]
+  x_mFM_Error=[]
+  x_mTE_Error=[]
+  x_mS_Error=[]
+  for metodo in MAPA_NUM_METODO.keys():
+    mediaPassos = sum(mapaMetodoPassos[metodo])/len(mapaMetodoPassos[metodo])
+    mediaFitness = sum(mapaMetodoMedias[metodo])/len(mapaMetodoMedias[metodo])
+    mediaFitnessMelhorIndividuo = sum( mapaMetodoMediasMelhorIndividuo[metodo])/len(mapaMetodoMediasMelhorIndividuo[metodo])
+    mediaTempoExecucao = sum(mapaMetodoTempos[metodo])/len(mapaMetodoTempos[metodo])
+    mediaSoma = sum(mapaMetodoSomas[metodo])/len(mapaMetodoSomas[metodo])
+    x_mP.append(mediaPassos)
+    x_mF.append(mediaFitness)
+    x_mFM.append(mediaFitnessMelhorIndividuo)
+    x_mTE.append(mediaTempoExecucao)
+    x_mS.append(mediaSoma)
+    x_mP_Error.append(desvioPadrao(mapaMetodoPassos[metodo]))
+    x_mF_Error.append(desvioPadrao(mapaMetodoMedias[metodo]))
+    x_mFM_Error.append(desvioPadrao(mapaMetodoMediasMelhorIndividuo[metodo]))
+    x_mTE_Error.append(desvioPadrao(mapaMetodoTempos[metodo]))
+    x_mS_Error.append(desvioPadrao(mapaMetodoSomas[metodo]))
+    print('Quantidade de passos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(mediaPassos))
+    print('Desvio Padrão de passos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(desvioPadrao(mapaMetodoPassos[metodo])))
+    print('Média de fitness para ' + MAPA_NUM_METODO[metodo] + ': ' + str(mediaFitness))
+    print('Desvio Padrão de passos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(desvioPadrao(mapaMetodoMedias[metodo])))
+    print('Média de fitness melhores individuos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(mediaFitnessMelhorIndividuo))
+    print('Desvio Padrão de passos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(desvioPadrao(mapaMetodoMediasMelhorIndividuo[metodo])))
+    print('Média tempo de execução para ' + MAPA_NUM_METODO[metodo] + ': ' + str(mediaTempoExecucao) + ' segundos')
+    print('Desvio Padrão de passos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(desvioPadrao(mapaMetodoTempos[metodo])))
+    print('Média de soma de fitness para ' + MAPA_NUM_METODO[metodo] + ': ' + str(mediaSoma))
+    print('Desvio Padrão de passos para ' + MAPA_NUM_METODO[metodo] + ': ' + str(desvioPadrao(mapaMetodoSomas[metodo])))
+
+    print('------------------------------------------------------------------------------------------------')
+
+  plotGraficos(x_mP,x_mF,x_mFM,x_mTE,x_mS,x_mP_Error,x_mF_Error,x_mFM_Error,x_mTE_Error,x_mS_Error, MAPA_NUM_METODO.keys())
 
 def plotGraficos(y_mP,y_mF,y_mFM,y_mTE,y_mS,y_mP_Error,y_mF_Error,y_mFM_Error,y_mTE_Error,y_mS_Error,x):
   plt.style.use('ggplot')
