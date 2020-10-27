@@ -30,8 +30,8 @@ MAPA_NUM_METODO = { 0:"PIORES INDIVIDUOS, CRUZAMENTO DISCRETO, MUTAÇÃO UNIFORM
                     4:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO NÃO UNIFORME",
                     5:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO NÃO UNIFORME"}
 
-LIM_MAX = 1
-LIM_MIN = -1
+LIM_MAX = 15
+LIM_MIN = -15
 
 y=["PICDMU","PICIMU", "TCDMU", "TCIMU", "PICIMNU", "TCIMNU"]
 
@@ -178,15 +178,16 @@ def funcaoAckley(individuo):
   somaCosXi = 0
   for xi in individuo:
     somaXiQuadrado += xi*xi
-    somaCosXi = math.cos(math.pi * 2 * xi)
+    somaCosXi += math.cos(math.pi * 2 * xi)
   
   exp1 = -0.2*math.sqrt(somaXiQuadrado/NUM_XS)
-  primeiraExpressao = -20 * math.exp(exp1)
+  primeiraExpressao = -20 * np.exp(exp1)
 
   exp2 = somaCosXi / NUM_XS
-  segundaExpressao = -math.exp(exp2)
-
-  return primeiraExpressao + segundaExpressao + 20 + math.exp(1)
+  segundaExpressao = -np.exp(exp2)
+  
+  resultadoPuro = primeiraExpressao + segundaExpressao + 20 + np.exp(1)
+  return round(resultadoPuro, 15)
 
 def calculaFitness(individuo):
   return 1 / (1 + funcaoAckley(individuo))
