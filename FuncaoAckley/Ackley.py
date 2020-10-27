@@ -9,6 +9,7 @@ NUM_MAX_GERACOES = 100
 NUM_POP = 100
 PROB_MUTACAO = 0
 PROB_RECOMB = 0.4
+ELITISMO = 1
 NUM_XS = 30
 QTD_PAIS = 5
 
@@ -206,6 +207,7 @@ def calculaFitness(individuo):
 
 def realizarCruzamento(populacao):
   chanceDaVez = random.randint(0,101)
+  chanceDaVez2 = random.randint(0,101)
   if (PROB_RECOMB * 100 < chanceDaVez):
     return populacao
 
@@ -213,9 +215,16 @@ def realizarCruzamento(populacao):
     pais = pegarMelhoresPais(populacao, 2)
     filhos = cruzar(pais[0], pais[1])
     
-    pioresIndividuosIndices = pegarIndicesPioresIndividuos(populacao, 2)
-    populacao[pioresIndividuosIndices[0]] = filhos[0]
-    populacao[pioresIndividuosIndices[1]] = filhos[1]
+    if(ELITISMO*100 < chanceDaVez2):
+      pioresIndividuosIndices = pegarIndicesPioresIndividuos(populacao, 2)
+      if(calculaFitness(populacao[pioresIndividuosIndices[0]]) < calculaFitness(filhos[0])):
+        populacao[pioresIndividuosIndices[0]] = filhos[0]
+      if(calculaFitness(populacao[pioresIndividuosIndices[1]]) < calculaFitness(filhos[1])):
+        populacao[pioresIndividuosIndices[1]] = filhos[1]
+    else:
+      pioresIndividuosIndices = pegarIndicesPioresIndividuos(populacao, 2)
+      populacao[pioresIndividuosIndices[0]] = filhos[0]
+      populacao[pioresIndividuosIndices[1]] = filhos[1]
   
   elif MET_USADO % 1000 < 300:
     pais = pegarPaisSuperSmashBros(populacao, len(populacao)/2) 
