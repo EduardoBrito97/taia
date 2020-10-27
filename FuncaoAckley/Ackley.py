@@ -7,8 +7,8 @@ from collections import defaultdict
 
 NUM_MAX_GERACOES = 100
 NUM_POP = 100
-PROB_MUTACAO = 0.4
-PROB_RECOMB = 0.9
+PROB_MUTACAO = 0
+PROB_RECOMB = 0.4
 NUM_XS = 30
 QTD_PAIS = 5
 
@@ -23,17 +23,29 @@ MEDIA = []
 
 NUM_AMOSTRAGEM = 1
 
-MAPA_NUM_METODO = { 0:"PIORES INDIVIDUOS, CRUZAMENTO DISCRETO, MUTAÇÃO UNIFORME",
-                    1:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO UNIFORME",
-                    2:"THANOS, CRUZAMENTO DISCRETO, MUTAÇÃO UNIFORME",
-                    3:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO UNIFORME",
-                    4:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO NÃO UNIFORME",
-                    5:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO NÃO UNIFORME"}
+
+## 1º número = seleção
+##    1 = Piores Individuos
+##    2 = Thanos
+## 2º número = cruzamento
+##    1 = Discreto
+##    2 = Intermediário
+## 3º número = mutação
+##    1 = Uniforme
+##    2 = Não Uniforme
+##    3 = Gaussiana
+
+MAPA_NUM_METODO = { 111:"PIORES INDIVIDUOS, CRUZAMENTO DISCRETO, MUTAÇÃO UNIFORME",
+                    121:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO UNIFORME",
+                    122:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO NÃO UNIFORME",
+                    123:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO GAUSSIANA",
+                    211:"THANOS, CRUZAMENTO DISCRETO, MUTAÇÃO UNIFORME",
+                    221:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO UNIFORME",
+                    222:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO NÃO UNIFORME",
+                    223:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO GAUSSIANA"}
 
 LIM_MAX = 15
 LIM_MIN = -15
-
-y=["PICDMU","PICIMU", "TCDMU", "TCIMU", "PICIMNU", "TCIMNU"]
 
 def main():
   global MET_USADO
@@ -44,7 +56,7 @@ def main():
   mapaMetodoTempos = {}
   mapaMetodoSomas = {}
 
-  for metodo in range(0, len(MAPA_NUM_METODO)):
+  for metodo in MAPA_NUM_METODO.keys():
     mapaMetodoPassos[metodo] = []
     mapaMetodoMedias[metodo] = []
     mapaMetodoMediasMelhorIndividuo[metodo] = []
@@ -54,7 +66,7 @@ def main():
   for i in range(0, NUM_AMOSTRAGEM):
     populacao = iniciarPopulacao()
     print(i)
-    for metodo in range(0, len(MAPA_NUM_METODO)):
+    for metodo in MAPA_NUM_METODO.keys():
       MET_USADO = metodo
       populacaoUsada = populacao.copy()
 
@@ -83,7 +95,7 @@ def main():
   x_mFM_Error=[]
   x_mTE_Error=[]
   x_mS_Error=[]
-  for metodo in MAPA_NUM_METODO:
+  for metodo in MAPA_NUM_METODO.keys():
     mediaPassos = sum(mapaMetodoPassos[metodo])/len(mapaMetodoPassos[metodo])
     mediaFitness = sum(mapaMetodoMedias[metodo])/len(mapaMetodoMedias[metodo])
     mediaFitnessMelhorIndividuo = sum( mapaMetodoMediasMelhorIndividuo[metodo])/len(mapaMetodoMediasMelhorIndividuo[metodo])
@@ -112,7 +124,7 @@ def main():
     
     print('------------------------------------------------------------------------------------------------')
 
-  plotGraficos(x_mP,x_mF,x_mFM,x_mTE,x_mS,x_mP_Error,x_mF_Error,x_mFM_Error,x_mTE_Error,x_mS_Error,y)
+  plotGraficos(x_mP,x_mF,x_mFM,x_mTE,x_mS,x_mP_Error,x_mF_Error,x_mFM_Error,x_mTE_Error,x_mS_Error, MAPA_NUM_METODO.keys())
 
 def desvioPadrao(elementos):
   mi = sum(elementos)/len(elementos)
@@ -197,39 +209,34 @@ def realizarCruzamento(populacao):
   if (PROB_RECOMB * 100 < chanceDaVez):
     return populacao
 
-  if MET_USADO == 0:
+  if MET_USADO % 1000 < 200:
     pais = pegarMelhoresPais(populacao, 2)
-    filhos = cruzamentoDiscreto(pais[0], pais[1], 2)
-    
-    pioresIndividuosIndices = pegarIndicesPioresIndividuos(populacao, 2)
-    populacao[pioresIndividuosIndices[0]] = filhos[0]
-    populacao[pioresIndividuosIndices[1]] = filhos[1]
-
-  elif MET_USADO == 1:
-    pais = pegarMelhoresPais(populacao, 2)
-    filhos = cruzamentoIntermediario(pais[0], pais[1], 2)
+    filhos = cruzar(pais[0], pais[1])
     
     pioresIndividuosIndices = pegarIndicesPioresIndividuos(populacao, 2)
     populacao[pioresIndividuosIndices[0]] = filhos[0]
     populacao[pioresIndividuosIndices[1]] = filhos[1]
   
-  elif MET_USADO == 2:
+  elif MET_USADO % 1000 < 300:
     pais = pegarPaisSuperSmashBros(populacao, len(populacao)/2) 
     indexPais = random.sample(range(0, len(pais)), len(pais))
     for i in range(0,len(indexPais),2):
-      filhos = cruzamentoDiscreto(pais[indexPais[i]], pais[indexPais[i+1]], 2)
+      filhos = cruzar(pais[indexPais[i]], pais[indexPais[i+1]])
       populacao.append(filhos[0])
       populacao.append(filhos[1])
 
-  elif MET_USADO == 3:
-    pais = pegarPaisSuperSmashBros(populacao, len(populacao)/2) 
-    indexPais = random.sample(range(0, len(pais)), len(pais))
-    for i in range(0,len(indexPais),2):
-      filhos = cruzamentoIntermediario(pais[indexPais[i]], pais[indexPais[i+1]], 2)
-      populacao.append(filhos[0])
-      populacao.append(filhos[1])
+  else:
+    raise Exception("No method recognized for selection.")
 
   return populacao
+
+def cruzar(pai1, pai2):
+  if MET_USADO % 100 < 20:
+    return cruzamentoDiscreto(pai1, pai2, 2)
+  elif MET_USADO % 100 < 30:
+    return cruzamentoIntermediario(pai1, pai2, 2)
+  else:
+    raise Exception("No method recognized for crossing.")
 
 def pegarPaisSuperSmashBros(populacao, numPais): ###Combate entres os individuos pra saber quem vai ser o pai
   pais = []
@@ -312,10 +319,14 @@ def pegarIndicesPioresIndividuos(populacao, numIndividuos):
   return indicesPioresIndividuos
 
 def realizarMutacao(populacao):
-  if MET_USADO <= 3:
+  if MET_USADO % 10 == 1:
     return mutacaoUniforme(populacao)
-  else:
+  elif MET_USADO % 10 == 2:
     return mutacaoNaoUniforme(populacao)
+  elif MET_USADO % 10 == 3:
+    return mutacaoGaussiana(populacao)
+  else:
+    raise Exception("No method recognized for mutation.")
 
 def mutacaoUniforme(populacao):
   novaPop = []
