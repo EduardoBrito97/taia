@@ -4,48 +4,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 from collections import defaultdict
+from Mutacao import realizarMutacao
+from Selecao import realizarCruzamento
+from Auxiliar import iniciarPopulacao
+from Auxiliar import calculaFitness
+from Auxiliar import desvioPadrao
+from Config import FITNESS_DESEJADO
+from Config import MAPA_NUM_METODO
+from Config import NUM_AMOSTRAGEM
+from Config import NUM_MAX_GERACOES
 
 MET_USADO = 0
 
 MELHOR_INDIVIDUO = []
 FITNESS_MELHOR_INDIVIDUO = []
-FITNESS_DESEJADO = 1
-
 SOMA = []
 MEDIA = []
-
-## 1º número = seleção
-##    1 = Piores Individuos
-##    2 = Thanos
-##    3 = 100% Elitista
-## 2º número = cruzamento
-##    1 = Discreto
-##    2 = Intermediário
-##    3 = BLX
-## 3º número = mutação
-##    1 = Uniforme
-##    2 = Não Uniforme
-##    3 = Gaussiana
-##    4 = BLX
-
-MAPA_NUM_METODO = { 221: "Thanos, Intermediário, Uniforme",
-                    222: "Thanos, Intermediário, Não uniforme",
-                    334: "Elitista, Blx, Blx"}
-
-NUM_MAX_GERACOES = 4000
-NUM_POP = 100
-PROB_MUTACAO = 0.01
-PROB_RECOMB = 0.5
-NUM_XS = 30
-QTD_PAIS = 5
-
-NUM_AMOSTRAGEM = 2
-
-PASSO_BLX_MAX = 0.20
-PESO_FITNESS_IDV_MUTACAO = 10
-
-LIM_MAX = 15
-LIM_MIN = -15
 
 def main():
   global MET_USADO
@@ -87,21 +61,14 @@ def main():
 
   pegaDadosPlotaGraficos(mapaMetodoPassos, mapaMetodoMedias, mapaMetodoMediasMelhorIndividuo, mapaMetodoTempos, mapaMetodoSomas)
 
-def desvioPadrao(elementos):
-  mi = sum(elementos)/len(elementos)
-  soma = 0
-  for i in elementos:
-    soma += abs(i - mi)**2
-  return ((soma/len(elementos))**0.5)
-
 def rodarPrograma(populacao):
   resetarVarGlobais()
   atualizaDados(populacao)
   numGeracoes = 1
   while (numGeracoes <= NUM_MAX_GERACOES 
           and FITNESS_MELHOR_INDIVIDUO[-1] < FITNESS_DESEJADO):
-    populacao = realizarCruzamento(populacao)
-    populacao = realizarMutacao(populacao)
+    populacao = realizarCruzamento(populacao, MET_USADO)
+    populacao = realizarMutacao(populacao, MET_USADO)
     atualizaDados(populacao)
     numGeracoes += 1
 
@@ -116,21 +83,6 @@ def resetarVarGlobais():
   FITNESS_MELHOR_INDIVIDUO = []
   MEDIA = []
   MELHOR_INDIVIDUO = []
-
-def iniciarPopulacao():
-  populacao = []
-  while (len(populacao) < NUM_POP):
-    individuo = geraIndividuo()
-    if (not individuo in populacao):
-      populacao.append(individuo)
-
-  return populacao
-
-def geraIndividuo():
-  individuo = []
-  for _ in range(NUM_XS):
-    individuo.append(random.uniform(LIM_MIN, LIM_MAX))
-  return individuo
 
 def atualizaDados(populacao):
   global SOMA, MEDIA, MELHOR_INDIVIDUO, FITNESS_MELHOR_INDIVIDUO
@@ -148,247 +100,6 @@ def atualizaDados(populacao):
   FITNESS_MELHOR_INDIVIDUO.append(fitness_melhor_individuo)
   MEDIA.append(SOMA[-1] / len(populacao))
   return
-
-def funcaoAckley(individuo):
-  somaXiQuadrado = 0
-  somaCosXi = 0
-  for xi in individuo:
-    somaXiQuadrado += xi*xi
-    somaCosXi += math.cos(math.pi * 2 * xi)
-  
-  exp1 = -0.2*math.sqrt(somaXiQuadrado/NUM_XS)
-  primeiraExpressao = -20 * np.exp(exp1)
-
-  exp2 = somaCosXi / NUM_XS
-  segundaExpressao = -np.exp(exp2)
-  
-  resultadoPuro = primeiraExpressao + segundaExpressao + 20 + np.exp(1)
-  return round(resultadoPuro, 15)
-
-def calculaFitness(individuo):
-  return 1 / (1 + funcaoAckley(individuo))
-
-def realizarCruzamento(populacao):
-  chanceDaVez = random.randint(0,101)
-  if (PROB_RECOMB * 100 < chanceDaVez):
-    return populacao
-
-  if MET_USADO % 1000 < 200:
-    pais = pegarMelhoresPais(populacao, 2)
-    filhos = cruzar(pais[0], pais[1])
-    
-    pioresIndividuosIndices = pegarIndicesPioresIndividuos(populacao, 2)
-    populacao[pioresIndividuosIndices[0]] = filhos[0]
-    populacao[pioresIndividuosIndices[1]] = filhos[1]
-  
-  elif MET_USADO % 1000 < 300:
-    pais = pegarPaisSuperSmashBros(populacao, len(populacao)/2) 
-    indexPais = random.sample(range(0, len(pais)), len(pais))
-    for i in range(0,len(indexPais),2):
-      if i == len(pais) - 1:
-        filhos = cruzar(pais[indexPais[i]], pais[indexPais[i]])
-      else:
-        filhos = cruzar(pais[indexPais[i]], pais[indexPais[i+1]])
-      populacao.append(filhos[0])
-      populacao.append(filhos[1])
-  
-  elif MET_USADO % 1000 < 400:
-    indexesAleatorios = random.sample(range(0, NUM_POP), NUM_POP)
-    for i in range(0, NUM_POP, 2):
-      if i == NUM_POP - 1:
-        filhos = cruzar(populacao[indexesAleatorios[i]], populacao[indexesAleatorios[i]])
-      else:
-        filhos = cruzar(populacao[indexesAleatorios[i]], populacao[indexesAleatorios[i+1]])
-      populacao.append(filhos[0])
-      populacao.append(filhos[1])
-    populacao.sort(reverse=True, key=calculaFitness)
-    populacao = populacao[:NUM_POP]
-  else:
-    raise Exception("No method recognized for selection.")
-
-  return populacao
-
-def cruzar(pai1, pai2):
-  if MET_USADO % 100 < 20:
-    return cruzamentoDiscreto(pai1, pai2, 2)
-  elif MET_USADO % 100 < 30:
-    return cruzamentoIntermediario(pai1, pai2, 2)
-  elif MET_USADO % 100 < 40:
-    return cruzamentoBlx(pai1, pai2, 2)
-  else:
-    raise Exception("No method recognized for crossing.")
-
-def pegarPaisSuperSmashBros(populacao, numPais): ###Combate entres os individuos pra saber quem vai ser o pai
-  pais = []
-  perdedores = []
-  while len(pais)<numPais:
-    indexCombatentes = random.sample(range(0, len(populacao)), 2)
-    combatenteA = populacao[indexCombatentes[0]]
-    combatenteB = populacao[indexCombatentes[1]]
-    if calculaFitness(combatenteA) > calculaFitness(combatenteB): ###A gente salva os vencedores e mata os perdedores
-      pais.append(combatenteA)
-      perdedores.append(combatenteB)
-      populacao.pop(indexCombatentes[1]) 
-    else: 
-      pais.append(combatenteB)
-      perdedores.append(combatenteA)
-      populacao.pop(indexCombatentes[0])
-  return pais
-
-def pegarMelhoresPais(populacao, numPais):
-  posicaoPais = []
-  for i in range(0, NUM_POP):
-    posicaoPais.append(random.randint(0, NUM_POP-1))
-  
-  mapaFitnessIndividuo = {}
-  fitnessPais = []
-  for posicao in posicaoPais:
-    individuo = populacao[posicao]
-    fitness = calculaFitness(individuo)
-    fitnessPais.append(fitness)
-    mapaFitnessIndividuo[fitness] = individuo
-
-  fitnessPais.sort(reverse=True)
-  pais = []
-  for i in range(0, numPais):
-    pais.append(mapaFitnessIndividuo[fitnessPais[i]])
-
-  return pais
-
-def cruzamentoDiscreto(pai1, pai2, numFilhos):
-  filhos = []
-  for _ in range(numFilhos):
-    filho = []
-    for i in range(NUM_XS):
-      filho.append((pai1[i] * 0.5) + (pai2[i] * 0.5))
-    filhos.append(filho)
-
-  return filhos
-
-def cruzamentoIntermediario(pai1, pai2, numFilhos):
-  filhos = []
-  fitnessPai1 = calculaFitness(pai1)
-  fitnessPai2 = calculaFitness(pai2)
-  probPai1 = fitnessPai1 / (fitnessPai1 + fitnessPai2)
-  probPai2 = fitnessPai2 / (fitnessPai1 + fitnessPai2)
-  for _ in range(numFilhos):
-    filho = []
-    for i in range(NUM_XS):
-      filho.append((pai1[i] * probPai1) + (pai2[i] * probPai2))
-    filhos.append(filho)
-
-  return filhos
-
-def cruzamentoBlx(pai1, pai2, numFilhos):
-  filhos = []
-  for _ in range(numFilhos):
-    filho = []
-    for i in range(NUM_XS):
-      menor = min(pai1[i], pai2[i])
-      maior = max(pai1[i], pai2[i])
-
-      delta = (maior - menor)
-      xi = random.uniform(menor - (PASSO_BLX_MAX * delta), maior + (PASSO_BLX_MAX * delta)) % 15
-      filho.append(xi)
-    filhos.append(filho)
-
-  return filhos
-
-def pegarIndicesPioresIndividuos(populacao, numIndividuos):
-  fitnessPop = []
-  mapaFitnessPosicao = {}
-  i = 0
-  for individuo in populacao:
-    fitness = calculaFitness(individuo)
-    fitnessPop.append(fitness)
-    mapaFitnessPosicao[fitness] = i
-    i += 1
-  
-  fitnessPop.sort()
-  indicesPioresIndividuos = []
-  for i in range(0, numIndividuos):
-    fitness = fitnessPop[i]
-    posicaoFitness = mapaFitnessPosicao[fitness]
-    indicesPioresIndividuos.append(posicaoFitness)
-
-  return indicesPioresIndividuos
-
-def realizarMutacao(populacao):
-  if MET_USADO % 10 == 1:
-    return mutacaoUniforme(populacao)
-  elif MET_USADO % 10 == 2:
-    return mutacaoNaoUniforme(populacao)
-  elif MET_USADO % 10 == 3:
-    return mutacaoGaussiana(populacao)
-  elif MET_USADO % 10 == 4:
-    return mutacaoBlx(populacao)
-  else:
-    raise Exception("No method recognized for mutation.")
-
-def mutacaoUniforme(populacao):
-  novaPop = []
-  for individuo in populacao:
-    novoIndividuo = []
-    for x in individuo:
-      novoX = x
-      if (PROB_MUTACAO * 100 > random.randint(0, 101)):
-        novoX = random.uniform(LIM_MIN, LIM_MAX)
-
-      novoIndividuo.append(novoX)
-    novaPop.append(novoIndividuo)
-
-  return novaPop
-
-def mutacaoNaoUniforme(populacao):
-  novaPop = []
-  for individuo in populacao:
-    desvPadr = desvioPadrao(individuo)
-    novoIndividuo = []
-    for x in individuo:
-      novoX = x
-      if (PROB_MUTACAO * 100 > random.randint(0, 101)):
-        limInferior = (x - desvPadr) % 15
-        limSuperior = (x + desvPadr) % 15
-        novoX = random.uniform(limInferior, limSuperior)
-
-      novoIndividuo.append(novoX)
-    novaPop.append(novoIndividuo)
-
-  return novaPop
-
-def mutacaoGaussiana(populacao):
-  novaPop = []
-  mu = 0
-  sigma = 0.5
-  for individuo in populacao:
-    dX = random.gauss(mu, sigma)
-    novoIndividuo = []
-    for x in individuo:
-      novoX = x
-      if (PROB_MUTACAO * 100 > random.randint(0, 101)):
-        novoX = (x + dX) % 15
-      novoIndividuo.append(novoX)
-      
-    novaPop.append(novoIndividuo)
-
-  return novaPop
-
-def mutacaoBlx(populacao):
-  novaPop = []
-  for individuo in populacao:
-    novoIndividuo = []
-    fitnessIndividuo = calculaFitness(individuo)
-    multiplicadorPorFitness = 1/(fitnessIndividuo*PESO_FITNESS_IDV_MUTACAO)
-    passo = PASSO_BLX_MAX * multiplicadorPorFitness
-    for x in individuo:
-      novoX = x
-      if (PROB_MUTACAO * 100 > random.randint(0, 101)):
-        novoX = random.uniform(x + (LIM_MIN*passo), x + (LIM_MAX*passo)) % 15
-      novoIndividuo.append(novoX)
-      
-    novaPop.append(novoIndividuo)
-
-  return novaPop
 
 def pegaDadosPlotaGraficos(mapaMetodoPassos, mapaMetodoMedias, mapaMetodoMediasMelhorIndividuo, mapaMetodoTempos, mapaMetodoSomas):
   x_mP=[]
