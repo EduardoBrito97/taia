@@ -5,13 +5,6 @@ import numpy as np
 import time
 from collections import defaultdict
 
-NUM_MAX_GERACOES = 4000
-NUM_POP = 100
-PROB_MUTACAO = 0.01
-PROB_RECOMB = 0.9
-NUM_XS = 30
-QTD_PAIS = 5
-
 MET_USADO = 0
 
 MELHOR_INDIVIDUO = []
@@ -21,14 +14,10 @@ FITNESS_DESEJADO = 1
 SOMA = []
 MEDIA = []
 
-NUM_AMOSTRAGEM = 2
-
-PASSO_BLX_MAX = 0.20
-PESO_FITNESS_IDV_MUTACAO = 10
-
 ## 1º número = seleção
 ##    1 = Piores Individuos
 ##    2 = Thanos
+##    3 = 100% Elitista
 ## 2º número = cruzamento
 ##    1 = Discreto
 ##    2 = Intermediário
@@ -39,16 +28,21 @@ PESO_FITNESS_IDV_MUTACAO = 10
 ##    3 = Gaussiana
 ##    4 = BLX
 
-MAPA_NUM_METODO = { 111:"PIORES INDIVIDUOS, CRUZAMENTO DISCRETO, MUTAÇÃO UNIFORME",
-                    121:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO UNIFORME",
-                    122:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO NÃO UNIFORME",
-                    123:"PIORES INDIVIDUOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO GAUSSIANA",
-                    134:"PIORES INDIVIDUOS, CRUZAMENTO BLX, MUTAÇÃO BLX",
-                    211:"THANOS, CRUZAMENTO DISCRETO, MUTAÇÃO UNIFORME",
-                    221:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO UNIFORME",
-                    222:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO NÃO UNIFORME",
-                    223:"THANOS, CRUZAMENTO INTERMEDIÁRIO, MUTAÇÃO GAUSSIANA",
-                    234:"THANOS, CRUZAMENTO BLX, MUTAÇÃO BLX"}
+MAPA_NUM_METODO = { 221: "Thanos, Intermediário, Uniforme",
+                    222: "Thanos, Intermediário, Não uniforme",
+                    334: "Elitista, Blx, Blx"}
+
+NUM_MAX_GERACOES = 4000
+NUM_POP = 100
+PROB_MUTACAO = 0.01
+PROB_RECOMB = 0.5
+NUM_XS = 30
+QTD_PAIS = 5
+
+NUM_AMOSTRAGEM = 2
+
+PASSO_BLX_MAX = 0.20
+PESO_FITNESS_IDV_MUTACAO = 10
 
 LIM_MAX = 15
 LIM_MIN = -15
@@ -197,7 +191,18 @@ def realizarCruzamento(populacao):
         filhos = cruzar(pais[indexPais[i]], pais[indexPais[i+1]])
       populacao.append(filhos[0])
       populacao.append(filhos[1])
-
+  
+  elif MET_USADO % 1000 < 400:
+    indexesAleatorios = random.sample(range(0, NUM_POP), NUM_POP)
+    for i in range(0, NUM_POP, 2):
+      if i == NUM_POP - 1:
+        filhos = cruzar(populacao[indexesAleatorios[i]], populacao[indexesAleatorios[i]])
+      else:
+        filhos = cruzar(populacao[indexesAleatorios[i]], populacao[indexesAleatorios[i+1]])
+      populacao.append(filhos[0])
+      populacao.append(filhos[1])
+    populacao.sort(reverse=True, key=calculaFitness)
+    populacao = populacao[:NUM_POP]
   else:
     raise Exception("No method recognized for selection.")
 
