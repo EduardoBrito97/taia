@@ -6,6 +6,7 @@ import time
 from collections import defaultdict
 from Config import NUM_XS
 from Config import PASSO_BLX_MAX
+from Config import ROUNDING
 from Auxiliar import calculaFitness
 
 def cruzar(pai1, pai2, metUsado):
@@ -37,7 +38,7 @@ def cruzamentoIntermediario(pai1, pai2, numFilhos):
   for _ in range(numFilhos):
     filho = []
     for i in range(NUM_XS):
-      filho.append((pai1[i] * probPai1) + (pai2[i] * probPai2))
+      filho.append(round((pai1[i] * probPai1) + (pai2[i] * probPai2), ROUNDING))
     filhos.append(filho)
 
   return filhos
@@ -51,7 +52,7 @@ def cruzamentoBlx(pai1, pai2, numFilhos):
       maior = max(pai1[i], pai2[i])
 
       delta = (maior - menor)
-      xi = random.uniform(menor - (PASSO_BLX_MAX * delta), maior + (PASSO_BLX_MAX * delta)) % 15
+      xi = round(random.uniform(menor - (PASSO_BLX_MAX * delta), maior + (PASSO_BLX_MAX * delta)), ROUNDING) % 15
       filho.append(xi)
     filhos.append(filho)
 

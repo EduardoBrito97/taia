@@ -7,6 +7,7 @@ from Config import NUM_XS
 from Config import NUM_POP
 from Config import LIM_MIN
 from Config import LIM_MAX
+from Config import ROUNDING
 
 def funcaoAckley(individuo):
   somaXiQuadrado = 0
@@ -22,7 +23,7 @@ def funcaoAckley(individuo):
   segundaExpressao = -np.exp(exp2)
   
   resultadoPuro = primeiraExpressao + segundaExpressao + 20 + np.exp(1)
-  return round(resultadoPuro, 15)
+  return round(resultadoPuro, ROUNDING)
 
 def calculaFitness(individuo):
   return 1 / (1 + funcaoAckley(individuo))
@@ -46,5 +47,5 @@ def iniciarPopulacao():
 def geraIndividuo():
   individuo = []
   for _ in range(NUM_XS):
-    individuo.append(random.uniform(LIM_MIN, LIM_MAX))
+    individuo.append(round(random.uniform(LIM_MIN, LIM_MAX), ROUNDING))
   return individuo

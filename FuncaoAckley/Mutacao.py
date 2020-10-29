@@ -11,6 +11,7 @@ from Config import LIM_MAX
 from Config import PROB_MUTACAO
 from Config import PESO_FITNESS_IDV_MUTACAO
 from Config import PASSO_BLX_MAX
+from Config import ROUNDING
 
 def realizarMutacao(populacao, metUsado):
     if metUsado % 10 == 1:
@@ -31,7 +32,7 @@ def mutacaoUniforme(populacao):
     for x in individuo:
       novoX = x
       if (PROB_MUTACAO * 100 > random.randint(0, 101)):
-        novoX = random.uniform(LIM_MIN, LIM_MAX)
+        novoX = round(random.uniform(LIM_MIN, LIM_MAX), ROUNDING)
 
       novoIndividuo.append(novoX)
     novaPop.append(novoIndividuo)
@@ -48,7 +49,7 @@ def mutacaoNaoUniforme(populacao):
       if (PROB_MUTACAO * 100 > random.randint(0, 101)):
         limInferior = (x - desvPadr) % 15
         limSuperior = (x + desvPadr) % 15
-        novoX = random.uniform(limInferior, limSuperior)
+        novoX = round(random.uniform(limInferior, limSuperior), ROUNDING)
 
       novoIndividuo.append(novoX)
     novaPop.append(novoIndividuo)
@@ -82,7 +83,7 @@ def mutacaoBlx(populacao):
     for x in individuo:
       novoX = x
       if (PROB_MUTACAO * 100 > random.randint(0, 101)):
-        novoX = random.uniform(x + (LIM_MIN*passo), x + (LIM_MAX*passo)) % 15
+        novoX = round(random.uniform(x + (LIM_MIN*passo), x + (LIM_MAX*passo)), ROUNDING) % 15
       novoIndividuo.append(novoX)
       
     novaPop.append(novoIndividuo)
