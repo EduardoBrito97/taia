@@ -14,12 +14,13 @@
 MAPA_NUM_METODO = { 222: "Thanos, Intermediário, Uniforme",
                     221: "Thanos, Intermediário, Não uniforme",
                     234: "Elitista, Blx, Blx",
-                    322: "aa "}
+                    322: "aa ",
+                    445: "Funciona Mizera"}
 
-NUM_MAX_GERACOES = 4000
+NUM_MAX_GERACOES = 5000
 NUM_POP = 100
-PROB_MUTACAO = 0.01
-PROB_RECOMB = 0.8
+PROB_MUTACAO = 0.05
+PROB_RECOMB = 0.9
 NUM_XS = 30
 QTD_PAIS = 5
 

@@ -16,6 +16,8 @@ def cruzar(pai1, pai2, metUsado):
     return cruzamentoIntermediario(pai1, pai2, 2)
   elif metUsado % 100 < 40:
     return cruzamentoBlx(pai1, pai2, 2)
+  elif metUsado % 100 < 50:
+    return cruzamentoCrossover(pai1, pai2, 1)
   else:
     raise Exception("No method recognized for crossing.")
 
@@ -56,4 +58,20 @@ def cruzamentoBlx(pai1, pai2, numFilhos):
       filho.append(xi)
     filhos.append(filho)
 
+  return filhos
+
+def cruzamentoCrossover(pai1, pai2, numFilhos):
+  filhos = []
+  halfA = []
+  halfB = []
+  for _ in range(numFilhos):
+    filho = []
+    cutPoint = random.randint(0,len(pai1))
+    halfA = pai1[0:cutPoint] + pai2[cutPoint:]
+    halfB = pai2[0:cutPoint] + pai1[cutPoint:]
+    multiplier = 0.5 * random.uniform(0.0, 1.0)
+    halfA = [i * multiplier for i in halfA]
+    halfB = [i * multiplier for i in halfB]
+    filho = [x + y for x, y in zip(halfA, halfB)]
+    filhos.append(filho)
   return filhos

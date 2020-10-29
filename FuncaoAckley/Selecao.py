@@ -37,7 +37,7 @@ def realizarCruzamento(populacao, metUsado):
   elif metUsado % 1000 < 400:
     indexesAleatorios = random.sample(range(0, NUM_POP), NUM_POP)
     for i in range(0, NUM_POP, 2):
-      if i == NUM_POP - 1:
+      if i == NUM_POP - 1: 
         filhos = cruzar(populacao[indexesAleatorios[i]], populacao[indexesAleatorios[i]], metUsado)
       else:
         filhos = cruzar(populacao[indexesAleatorios[i]], populacao[indexesAleatorios[i+1]], metUsado)
@@ -45,6 +45,15 @@ def realizarCruzamento(populacao, metUsado):
       populacao.append(filhos[1])
     populacao.sort(reverse=True, key=calculaFitness)
     populacao = populacao[:NUM_POP]
+  elif metUsado % 1000 < 500:
+    populacaoCopy = populacao
+    pais  = pegarMelhoresTorneio(populacao)
+    filho = cruzar(pais[0],pais[1],metUsado)[0]
+    fitnessPopulacao = list(map(calculaFitness, populacao))
+    fitnessPopulacao, populacaoCopy = (list(t) for t in zip(*sorted(zip(fitnessPopulacao, populacaoCopy))))
+    if fitnessPopulacao[0]<calculaFitness(filho):
+      populacao.remove(populacaoCopy[0])
+      populacao.append(filho)
   else:
     raise Exception("No method recognized for selection.")
 
@@ -105,3 +114,18 @@ def pegarIndicesPioresIndividuos(populacao, numIndividuos):
     indicesPioresIndividuos.append(posicaoFitness)
 
   return indicesPioresIndividuos
+
+
+def pegarMelhoresTorneio(populacao):
+  pais = []
+  populacaoCopia = populacao
+  fitnessPopulacao = list(map(calculaFitness, populacaoCopia))
+  fitnessPopulacao, populacaoCopia = (list(t) for t in zip(*sorted(zip(fitnessPopulacao, populacaoCopia))))
+  populacaoCopia = populacaoCopia[0:int(len(populacaoCopia)/2)]
+  competidores = random.sample(range(0,len(populacaoCopia)), 5)
+  competidores.sort()
+  pais.append(populacaoCopia[competidores[-1]])
+  pais.append(populacaoCopia[competidores[-2]])
+
+  return pais
+  

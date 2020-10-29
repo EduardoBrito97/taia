@@ -22,6 +22,8 @@ def realizarMutacao(populacao, metUsado):
         return mutacaoGaussiana(populacao)
     elif metUsado % 10 == 4:
         return mutacaoBlx(populacao)
+    elif metUsado % 10 == 5:
+        return mutacaoAditiva(populacao)
     else:
         raise Exception("No method recognized for mutation.")
 
@@ -89,3 +91,20 @@ def mutacaoBlx(populacao):
     novaPop.append(novoIndividuo)
 
   return novaPop
+
+def mutacaoAditiva(populacao):
+  novaPop = populacao
+  for individuo in novaPop:
+    filho = []
+    if (PROB_MUTACAO * 100 > random.randint(0, 101)):
+      for x in individuo:
+        x = x + random.uniform(0.0, 1.0)
+        if x > 15:
+          x = 15
+        elif x < -15:
+          x = -15
+        filho.append(x)
+      populacao.remove(individuo)
+      populacao.append(filho)
+  return populacao
+      
