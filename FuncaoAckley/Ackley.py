@@ -39,7 +39,7 @@ def main():
 
   for i in range(0, NUM_AMOSTRAGEM):
     populacao = iniciarPopulacao()
-    print("Amostragem " + str(i) + " concluida.")
+    print("Amostragem " + str(i) + " inciada.")
     for metodo in MAPA_NUM_METODO.keys():
       MET_USADO = metodo
       populacaoUsada = populacao.copy()
