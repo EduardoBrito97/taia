@@ -3,6 +3,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+from numba import jit, cuda
 from collections import defaultdict
 from Mutacao import realizarMutacao
 from Selecao import realizarCruzamento
@@ -21,6 +22,7 @@ FITNESS_MELHOR_INDIVIDUO = []
 SOMA = []
 MEDIA = []
 
+@cuda.jit
 def main():
   global MET_USADO
 
